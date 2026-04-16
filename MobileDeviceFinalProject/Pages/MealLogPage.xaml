@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="MobileDeviceFinalProject.Pages.MealLogPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:pageModels="clr-namespace:MobileDeviceFinalProject.PageModels"
+    xmlns:models="clr-namespace:MobileDeviceFinalProject.Models"
+    x:DataType="pageModels:MealLogPageModel"
+    Title="Meal Log">
+
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            EventName="Appearing"
+            Command="{Binding AppearingCommand}" />
+    </ContentPage.Behaviors>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Add" Command="{Binding AddMealCommand}" IconImageSource="{StaticResource IconAdd}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Macro summary header -->
+        <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="{StaticResource LayoutPadding}">
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="4">
+                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" Spacing="2">
+                    <Label Text="{Binding TotalCalories, StringFormat='{0:F0}'}" FontAttributes="Bold" HorizontalOptions="Center" FontSize="20" />
+                    <Label Text="kcal" FontSize="11" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="2">
+                    <Label Text="{Binding TotalProtein, StringFormat='{0:F0}g'}" FontAttributes="Bold" HorizontalOptions="Center" FontSize="20" />
+                    <Label Text="Protein" FontSize="11" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center" Spacing="2">
+                    <Label Text="{Binding TotalCarbs, StringFormat='{0:F0}g'}" FontAttributes="Bold" HorizontalOptions="Center" FontSize="20" />
+                    <Label Text="Carbs" FontSize="11" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="3" HorizontalOptions="Center" Spacing="2">
+                    <Label Text="{Binding TotalFat, StringFormat='{0:F0}g'}" FontAttributes="Bold" HorizontalOptions="Center" FontSize="20" />
+                    <Label Text="Fat" FontSize="11" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <!-- Meal list -->
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding Meals}"
+            Margin="{StaticResource LayoutPadding}">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8" Margin="0,40">
+                    <Label Text="No meals logged today." HorizontalOptions="Center" />
+                    <Label Text="Tap + to add your first meal." FontSize="13" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:MealEntry">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="{Binding FoodName}" FontAttributes="Bold" FontSize="16" />
+                                <Label Text="{Binding Calories, StringFormat='{0:F0} kcal'}" FontSize="14" />
+                                <Label FontSize="12">
+                                    <Label.Text>
+                                        <MultiBinding StringFormat="P:{0:F0}g  C:{1:F0}g  F:{2:F0}g">
+                                            <Binding Path="ProteinG" />
+                                            <Binding Path="CarbsG" />
+                                            <Binding Path="FatG" />
+                                        </MultiBinding>
+                                    </Label.Text>
+                                </Label>
+                                <Label Text="{Binding LoggedAt, StringFormat='{0:h:mm tt}'}" FontSize="11" />
+                            </VerticalStackLayout>
+                            <ImageButton
+                                Grid.Column="1"
+                                Source="{StaticResource IconDelete}"
+                                HeightRequest="36"
+                                WidthRequest="36"
+                                Aspect="Center"
+                                VerticalOptions="Center"
+                                Command="{Binding DeleteMealCommand, Source={RelativeSource AncestorType={x:Type pageModels:MealLogPageModel}}, x:DataType=pageModels:MealLogPageModel}"
+                                CommandParameter="{Binding .}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

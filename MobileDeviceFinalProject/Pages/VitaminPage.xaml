@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="MobileDeviceFinalProject.Pages.VitaminPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:pageModels="clr-namespace:MobileDeviceFinalProject.PageModels"
+    x:DataType="pageModels:VitaminPageModel"
+    Title="Vitamins">
+
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+            EventName="Appearing"
+            Command="{Binding AppearingCommand}" />
+    </ContentPage.Behaviors>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Add" Command="{Binding AddVitaminCommand}" IconImageSource="{StaticResource IconAdd}" />
+    </ContentPage.ToolbarItems>
+
+    <CollectionView
+        ItemsSource="{Binding Vitamins}"
+        Margin="{StaticResource LayoutPadding}">
+        <CollectionView.EmptyView>
+            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8" Margin="0,60">
+                <Label Text="No vitamins added yet." HorizontalOptions="Center" />
+                <Label Text="Tap + to add your first vitamin or supplement." FontSize="13" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </CollectionView.EmptyView>
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="pageModels:VitaminViewModel">
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label Text="{Binding Entry.Name}" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="{Binding Entry.Dosage}" FontSize="13" />
+                            <Label Text="{Binding Entry.Benefits}" FontSize="12" />
+                            <Label Text="{Binding StreakText}" FontSize="13" />
+                        </VerticalStackLayout>
+                        <Button
+                            Grid.Column="1"
+                            Text="{Binding TakenLabel}"
+                            FontSize="13"
+                            VerticalOptions="Center"
+                            Command="{Binding ToggleVitaminCommand, Source={RelativeSource AncestorType={x:Type pageModels:VitaminPageModel}}, x:DataType=pageModels:VitaminPageModel}"
+                            CommandParameter="{Binding .}" />
+                        <ImageButton
+                            Grid.Column="2"
+                            Source="{StaticResource IconDelete}"
+                            HeightRequest="36"
+                            WidthRequest="36"
+                            Aspect="Center"
+                            VerticalOptions="Center"
+                            Command="{Binding DeleteVitaminCommand, Source={RelativeSource AncestorType={x:Type pageModels:VitaminPageModel}}, x:DataType=pageModels:VitaminPageModel}"
+                            CommandParameter="{Binding .}" />
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
+</ContentPage>

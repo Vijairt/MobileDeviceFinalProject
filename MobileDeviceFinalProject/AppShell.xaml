@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="MobileDeviceFinalProject.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:MobileDeviceFinalProject.Pages"
+    Shell.FlyoutBehavior="Disabled"
+    Title="FitTrack Pro">
+
+    <TabBar>
+        <ShellContent
+            Title="Dashboard"
+            Icon="{StaticResource IconDashboard}"
+            ContentTemplate="{DataTemplate pages:DashboardPage}"
+            Route="dashboard" />
+
+        <ShellContent
+            Title="Meals"
+            Icon="{StaticResource IconMeals}"
+            ContentTemplate="{DataTemplate pages:MealLogPage}"
+            Route="meals" />
+
+        <ShellContent
+            Title="Workouts"
+            Icon="{StaticResource IconWorkouts}"
+            ContentTemplate="{DataTemplate pages:WorkoutPage}"
+            Route="workouts" />
+
+        <ShellContent
+            Title="Vitamins"
+            Icon="{StaticResource IconVitamins}"
+            ContentTemplate="{DataTemplate pages:VitaminPage}"
+            Route="vitamins" />
+    </TabBar>
+
+</Shell>

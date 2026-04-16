@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="MobileDeviceFinalProject.Pages.AddWorkoutPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:pageModels="clr-namespace:MobileDeviceFinalProject.PageModels"
+    x:DataType="pageModels:AddWorkoutPageModel"
+    Title="Log Workout">
+
+    <ContentPage.Resources>
+        <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Cancel" Command="{Binding CancelCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="{StaticResource LayoutPadding}">
+
+            <Label Text="Exercise Type *" FontAttributes="Bold" />
+            <Picker
+                Title="Select exercise type"
+                ItemsSource="{Binding ExerciseTypes}"
+                SelectedItem="{Binding ExerciseType}" />
+
+            <Label Text="Duration (minutes) *" FontAttributes="Bold" />
+            <Entry Placeholder="e.g. 30" Text="{Binding DurationMinutes}" Keyboard="Numeric" />
+
+            <Label Text="Distance (miles)" FontAttributes="Bold" />
+            <Entry Placeholder="e.g. 3.1  (optional)" Text="{Binding DistanceMiles}" Keyboard="Numeric" />
+
+            <Label Text="Sets" FontAttributes="Bold" />
+            <Entry Placeholder="optional" Text="{Binding Sets}" Keyboard="Numeric" />
+
+            <Label Text="Reps" FontAttributes="Bold" />
+            <Entry Placeholder="optional" Text="{Binding Reps}" Keyboard="Numeric" />
+
+            <Label Text="Notes" FontAttributes="Bold" />
+            <Editor Placeholder="Any extra notes…" Text="{Binding Notes}" HeightRequest="80" />
+
+            <Button
+                Text="Save Workout"
+                Command="{Binding SaveCommand}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                Margin="0,8,0,0" />
+
+            <ActivityIndicator IsVisible="{Binding IsBusy}" IsRunning="{Binding IsBusy}" HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
