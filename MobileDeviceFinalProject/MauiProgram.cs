@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using Syncfusion.Maui.Toolkit.Hosting;
+using MobileDeviceFinalProject.Data;
 
 namespace MobileDeviceFinalProject
 {
@@ -9,6 +10,7 @@ namespace MobileDeviceFinalProject
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+
             builder
                 .UseMauiApp<App>()
                 .UseMauiCommunityToolkit()

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MobileDeviceFinalProject.Data;
 using MobileDeviceFinalProject.Models;
 
 namespace MobileDeviceFinalProject.PageModels
@@ -31,7 +32,9 @@ namespace MobileDeviceFinalProject.PageModels
         {
             if (string.IsNullOrWhiteSpace(ExerciseType) || string.IsNullOrWhiteSpace(DurationMinutes))
                 return;
+
             IsBusy = true;
+
             try
             {
                 var entry = new WorkoutEntry
@@ -44,7 +47,9 @@ namespace MobileDeviceFinalProject.PageModels
                     Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes,
                     LoggedAt = DateTime.Now
                 };
+
                 await _workoutRepository.SaveAsync(entry);
+                await Shell.Current.DisplayAlert("Success", "Workout saved!", "OK");
                 await Shell.Current.GoToAsync("..");
             }
             catch (Exception ex)
@@ -58,6 +63,9 @@ namespace MobileDeviceFinalProject.PageModels
         }
 
         [RelayCommand]
-        private async Task Cancel() => await Shell.Current.GoToAsync("..");
+        private async Task Cancel()
+        {
+            await Shell.Current.GoToAsync("..");
+        }
     }
 }

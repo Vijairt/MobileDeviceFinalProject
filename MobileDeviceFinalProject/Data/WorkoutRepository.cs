@@ -17,8 +17,10 @@ namespace MobileDeviceFinalProject.Data
         private async Task Init()
         {
             if (_hasBeenInitialized) return;
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             try
             {
                 var cmd = connection.CreateCommand();
@@ -40,19 +42,24 @@ namespace MobileDeviceFinalProject.Data
                 _logger.LogError(e, "Error creating WorkoutEntry table");
                 throw;
             }
+
             _hasBeenInitialized = true;
         }
 
         public async Task<List<WorkoutEntry>> GetByDateRangeAsync(DateTime start, DateTime end)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT * FROM WorkoutEntry WHERE date(LoggedAt) BETWEEN date(@start) AND date(@end) ORDER BY LoggedAt DESC";
             cmd.Parameters.AddWithValue("@start", start.ToString("yyyy-MM-dd"));
             cmd.Parameters.AddWithValue("@end", end.ToString("yyyy-MM-dd"));
+
             var workouts = new List<WorkoutEntry>();
+
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -68,18 +75,22 @@ namespace MobileDeviceFinalProject.Data
                     LoggedAt = DateTime.Parse(reader.GetString(7))
                 });
             }
+
             return workouts;
         }
 
         public async Task SaveAsync(WorkoutEntry entry)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO WorkoutEntry (ExerciseType, DurationMinutes, DistanceMiles, Sets, Reps, Notes, LoggedAt)
                 VALUES (@ExerciseType, @DurationMinutes, @DistanceMiles, @Sets, @Reps, @Notes, @LoggedAt)";
+
             cmd.Parameters.AddWithValue("@ExerciseType", entry.ExerciseType);
             cmd.Parameters.AddWithValue("@DurationMinutes", entry.DurationMinutes);
             cmd.Parameters.AddWithValue("@DistanceMiles", (object?)entry.DistanceMiles ?? DBNull.Value);
@@ -87,17 +98,22 @@ namespace MobileDeviceFinalProject.Data
             cmd.Parameters.AddWithValue("@Reps", (object?)entry.Reps ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Notes", (object?)entry.Notes ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@LoggedAt", entry.LoggedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-            await cmd.ExecuteNonQueryAsync();
+
+            var rows = await cmd.ExecuteNonQueryAsync();
+            _logger.LogInformation("Saved workout entry. Rows affected: {Rows}", rows);
         }
 
         public async Task DeleteAsync(int id)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
             cmd.CommandText = "DELETE FROM WorkoutEntry WHERE Id = @id";
             cmd.Parameters.AddWithValue("@id", id);
+
             await cmd.ExecuteNonQueryAsync();
         }
     }

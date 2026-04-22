@@ -4,10 +4,19 @@ namespace MobileDeviceFinalProject.Pages
 {
     public partial class WorkoutPage : ContentPage
     {
-        public WorkoutPage(WorkoutPageModel model)
+        private readonly WorkoutPageModel _viewModel;
+
+        public WorkoutPage(WorkoutPageModel viewModel)
         {
             InitializeComponent();
-            BindingContext = model;
+            BindingContext = viewModel;
+            _viewModel = viewModel;
+        }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            await _viewModel.ForceReload();
         }
     }
 }

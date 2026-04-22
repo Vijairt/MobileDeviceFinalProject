@@ -17,8 +17,10 @@ namespace MobileDeviceFinalProject.Data
         private async Task Init()
         {
             if (_hasBeenInitialized) return;
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             try
             {
                 var cmd = connection.CreateCommand();
@@ -42,17 +44,22 @@ namespace MobileDeviceFinalProject.Data
                 _logger.LogError(e, "Error creating Vitamin tables");
                 throw;
             }
+
             _hasBeenInitialized = true;
         }
 
         public async Task<List<VitaminEntry>> GetAllAsync()
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT * FROM VitaminEntry ORDER BY Name";
+
             var vitamins = new List<VitaminEntry>();
+
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -65,36 +72,50 @@ namespace MobileDeviceFinalProject.Data
                     IsDaily = reader.GetInt32(4) == 1
                 });
             }
+
             return vitamins;
         }
 
         public async Task SaveVitaminAsync(VitaminEntry entry)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
+
             if (entry.Id == 0)
             {
-                cmd.CommandText = "INSERT INTO VitaminEntry (Name, Dosage, Benefits, IsDaily) VALUES (@Name, @Dosage, @Benefits, @IsDaily)";
+                cmd.CommandText = @"
+                    INSERT INTO VitaminEntry (Name, Dosage, Benefits, IsDaily)
+                    VALUES (@Name, @Dosage, @Benefits, @IsDaily)";
             }
             else
             {
-                cmd.CommandText = "UPDATE VitaminEntry SET Name=@Name, Dosage=@Dosage, Benefits=@Benefits, IsDaily=@IsDaily WHERE Id=@Id";
+                cmd.CommandText = @"
+                    UPDATE VitaminEntry
+                    SET Name=@Name, Dosage=@Dosage, Benefits=@Benefits, IsDaily=@IsDaily
+                    WHERE Id=@Id";
                 cmd.Parameters.AddWithValue("@Id", entry.Id);
             }
+
             cmd.Parameters.AddWithValue("@Name", entry.Name);
             cmd.Parameters.AddWithValue("@Dosage", entry.Dosage);
             cmd.Parameters.AddWithValue("@Benefits", entry.Benefits);
             cmd.Parameters.AddWithValue("@IsDaily", entry.IsDaily ? 1 : 0);
-            await cmd.ExecuteNonQueryAsync();
+
+            var rows = await cmd.ExecuteNonQueryAsync();
+            _logger.LogInformation("Saved vitamin entry. Rows affected: {Rows}", rows);
         }
 
         public async Task DeleteVitaminAsync(int id)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
             cmd.CommandText = "DELETE FROM VitaminEntry WHERE Id = @id";
             cmd.Parameters.AddWithValue("@id", id);
@@ -109,12 +130,16 @@ namespace MobileDeviceFinalProject.Data
         public async Task<List<VitaminLog>> GetLogsForDateAsync(DateTime date)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT * FROM VitaminLog WHERE date(LoggedDate) = date(@date)";
             cmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd"));
+
             var logs = new List<VitaminLog>();
+
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -125,62 +150,89 @@ namespace MobileDeviceFinalProject.Data
                     LoggedDate = DateTime.Parse(reader.GetString(2))
                 });
             }
+
             return logs;
         }
 
         public async Task LogVitaminAsync(int vitaminId, DateTime date)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var checkCmd = connection.CreateCommand();
-            checkCmd.CommandText = "SELECT COUNT(*) FROM VitaminLog WHERE VitaminEntryId = @id AND date(LoggedDate) = date(@date)";
+            checkCmd.CommandText = @"
+                SELECT COUNT(*) FROM VitaminLog
+                WHERE VitaminEntryId = @id AND date(LoggedDate) = date(@date)";
             checkCmd.Parameters.AddWithValue("@id", vitaminId);
             checkCmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd"));
+
             var count = (long)(await checkCmd.ExecuteScalarAsync())!;
             if (count > 0) return;
 
             var cmd = connection.CreateCommand();
-            cmd.CommandText = "INSERT INTO VitaminLog (VitaminEntryId, LoggedDate) VALUES (@id, @date)";
+            cmd.CommandText = @"
+                INSERT INTO VitaminLog (VitaminEntryId, LoggedDate)
+                VALUES (@id, @date)";
             cmd.Parameters.AddWithValue("@id", vitaminId);
             cmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd HH:mm:ss"));
+
             await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task UnlogVitaminAsync(int vitaminId, DateTime date)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
-            cmd.CommandText = "DELETE FROM VitaminLog WHERE VitaminEntryId = @id AND date(LoggedDate) = date(@date)";
+            cmd.CommandText = @"
+                DELETE FROM VitaminLog
+                WHERE VitaminEntryId = @id AND date(LoggedDate) = date(@date)";
             cmd.Parameters.AddWithValue("@id", vitaminId);
             cmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd"));
+
             await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task<int> GetStreakAsync(int vitaminId)
         {
             await Init();
+
             await using var connection = new SqliteConnection(Constants.DatabasePath);
             await connection.OpenAsync();
+
             var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT date(LoggedDate) FROM VitaminLog WHERE VitaminEntryId = @id ORDER BY LoggedDate DESC";
+            cmd.CommandText = @"
+                SELECT date(LoggedDate)
+                FROM VitaminLog
+                WHERE VitaminEntryId = @id
+                ORDER BY LoggedDate DESC";
             cmd.Parameters.AddWithValue("@id", vitaminId);
+
             var dates = new List<DateTime>();
+
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
+            {
                 dates.Add(DateTime.Parse(reader.GetString(0)));
+            }
 
             if (dates.Count == 0) return 0;
 
             var check = DateTime.Today;
+
             if (dates[0].Date != check && dates[0].Date != check.AddDays(-1))
                 return 0;
+
             if (dates[0].Date != check)
                 check = check.AddDays(-1);
 
             int streak = 0;
+
             foreach (var d in dates)
             {
                 if (d.Date == check)
@@ -190,6 +242,7 @@ namespace MobileDeviceFinalProject.Data
                 }
                 else break;
             }
+
             return streak;
         }
     }

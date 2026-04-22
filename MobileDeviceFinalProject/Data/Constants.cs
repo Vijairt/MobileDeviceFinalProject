@@ -1,10 +1,8 @@
-namespace MobileDeviceFinalProject.Data
+namespace MobileDeviceFinalProject
 {
     public static class Constants
     {
-        public const string DatabaseFilename = "AppSQLite.db3";
-
         public static string DatabasePath =>
-            $"Data Source={Path.Combine(FileSystem.AppDataDirectory, DatabaseFilename)}";
+            $"Data Source={Path.Combine(FileSystem.AppDataDirectory, "fittrack.db")}";
     }
 }

@@ -1,13 +1,21 @@
 using MobileDeviceFinalProject.PageModels;
 
-namespace MobileDeviceFinalProject.Pages
+namespace MobileDeviceFinalProject.Pages;
+
+public partial class MealLogPage : ContentPage
 {
-    public partial class MealLogPage : ContentPage
+    private readonly MealLogPageModel _viewModel;
+
+    public MealLogPage(MealLogPageModel viewModel)
     {
-        public MealLogPage(MealLogPageModel model)
-        {
-            InitializeComponent();
-            BindingContext = model;
-        }
+        InitializeComponent();
+        BindingContext = viewModel;
+        _viewModel = viewModel;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _viewModel.ForceReload();
     }
 }

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MobileDeviceFinalProject.Data;
 using MobileDeviceFinalProject.Models;
 
 namespace MobileDeviceFinalProject.PageModels
@@ -24,8 +25,11 @@ namespace MobileDeviceFinalProject.PageModels
         [RelayCommand]
         private async Task Save()
         {
-            if (string.IsNullOrWhiteSpace(Name)) return;
+            if (string.IsNullOrWhiteSpace(Name))
+                return;
+
             IsBusy = true;
+
             try
             {
                 var entry = new VitaminEntry
@@ -35,7 +39,9 @@ namespace MobileDeviceFinalProject.PageModels
                     Benefits = Benefits,
                     IsDaily = IsDaily
                 };
+
                 await _vitaminRepository.SaveVitaminAsync(entry);
+                await Shell.Current.DisplayAlert("Success", "Vitamin saved!", "OK");
                 await Shell.Current.GoToAsync("..");
             }
             catch (Exception ex)
@@ -49,6 +55,9 @@ namespace MobileDeviceFinalProject.PageModels
         }
 
         [RelayCommand]
-        private async Task Cancel() => await Shell.Current.GoToAsync("..");
+        private async Task Cancel()
+        {
+            await Shell.Current.GoToAsync("..");
+        }
     }
 }

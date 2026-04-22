@@ -21,7 +21,6 @@
 
     <Grid RowDefinitions="Auto,Auto,*">
 
-        <!-- Weekly summary -->
         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="{StaticResource LayoutPadding}">
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="4">
                 <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" Spacing="2">
@@ -39,59 +38,70 @@
             </Grid>
         </Border>
 
-        <!-- Progression tip -->
         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="{StaticResource LayoutPadding}">
             <Label Text="{Binding ProgressionTip}" FontSize="14" />
         </Border>
 
-        <!-- Workout list -->
-        <CollectionView
+        <RefreshView
             Grid.Row="2"
-            ItemsSource="{Binding WeeklyWorkouts}"
-            Margin="{StaticResource LayoutPadding}">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8" Margin="0,30">
-                    <Label Text="No workouts logged this week." HorizontalOptions="Center" />
-                    <Label Text="Tap + to log a session." FontSize="13" HorizontalOptions="Center" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:WorkoutEntry">
-                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                <Label Text="{Binding ExerciseType}" FontAttributes="Bold" FontSize="16" />
-                                <Label Text="{Binding DurationMinutes, StringFormat='{0} min'}" FontSize="14" />
-                                <Label Text="{Binding DistanceMiles, StringFormat='{0:F2} miles'}"
-                                       FontSize="13"
-                                       IsVisible="{Binding DistanceMiles, Converter={toolkit:IsNotNullConverter}}" />
-                                <Label FontSize="13"
-                                       IsVisible="{Binding Sets, Converter={toolkit:IsNotNullConverter}}">
-                                    <Label.Text>
-                                        <MultiBinding StringFormat="{}{0} sets × {1} reps">
-                                            <Binding Path="Sets" />
-                                            <Binding Path="Reps" />
-                                        </MultiBinding>
-                                    </Label.Text>
-                                </Label>
-                                <Label Text="{Binding Notes}" FontSize="12"
-                                       IsVisible="{Binding Notes, Converter={toolkit:IsNotNullConverter}}" />
-                                <Label Text="{Binding LoggedAt, StringFormat='{0:ddd, MMM d}'}" FontSize="11" />
-                            </VerticalStackLayout>
-                            <ImageButton
-                                Grid.Column="1"
-                                Source="{StaticResource IconDelete}"
-                                HeightRequest="36"
-                                WidthRequest="36"
-                                Aspect="Center"
-                                VerticalOptions="Center"
-                                Command="{Binding DeleteWorkoutCommand, Source={RelativeSource AncestorType={x:Type pageModels:WorkoutPageModel}}, x:DataType=pageModels:WorkoutPageModel}"
-                                CommandParameter="{Binding .}" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+            Command="{Binding RefreshCommand}"
+            IsRefreshing="{Binding IsBusy}">
+
+            <CollectionView
+                ItemsSource="{Binding WeeklyWorkouts}"
+                Margin="{StaticResource LayoutPadding}">
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8" Margin="0,30">
+                        <Label Text="No workouts logged this week." HorizontalOptions="Center" />
+                        <Label Text="Tap + to log a session." FontSize="13" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:WorkoutEntry">
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                    <Label Text="{Binding ExerciseType}" FontAttributes="Bold" FontSize="16" />
+                                    <Label Text="{Binding DurationMinutes, StringFormat='{0} min'}" FontSize="14" />
+
+                                    <Label Text="{Binding DistanceMiles, StringFormat='{0:F2} miles'}"
+                                           FontSize="13"
+                                           IsVisible="{Binding DistanceMiles, Converter={toolkit:IsNotNullConverter}}" />
+
+                                    <Label FontSize="13"
+                                           IsVisible="{Binding Sets, Converter={toolkit:IsNotNullConverter}}">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="{}{0} sets × {1} reps">
+                                                <Binding Path="Sets" />
+                                                <Binding Path="Reps" />
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
+
+                                    <Label Text="{Binding Notes}" FontSize="12"
+                                           IsVisible="{Binding Notes, Converter={toolkit:IsNotNullConverter}}" />
+
+                                    <Label Text="{Binding LoggedAt, StringFormat='{0:ddd, MMM d}'}" FontSize="11" />
+                                </VerticalStackLayout>
+
+                                <ImageButton
+                                    Grid.Column="1"
+                                    Source="{StaticResource IconDelete}"
+                                    HeightRequest="36"
+                                    WidthRequest="36"
+                                    Aspect="Center"
+                                    VerticalOptions="Center"
+                                    Command="{Binding DeleteWorkoutCommand, Source={RelativeSource AncestorType={x:Type pageModels:WorkoutPageModel}}, x:DataType=pageModels:WorkoutPageModel}"
+                                    CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
 
     </Grid>
 </ContentPage>

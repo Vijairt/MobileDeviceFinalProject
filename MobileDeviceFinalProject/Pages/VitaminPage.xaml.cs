@@ -4,10 +4,19 @@ namespace MobileDeviceFinalProject.Pages
 {
     public partial class VitaminPage : ContentPage
     {
-        public VitaminPage(VitaminPageModel model)
+        private readonly VitaminPageModel _viewModel;
+
+        public VitaminPage(VitaminPageModel viewModel)
         {
             InitializeComponent();
-            BindingContext = model;
+            BindingContext = viewModel;
+            _viewModel = viewModel;
+        }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            await _viewModel.ForceReload();
         }
     }
 }

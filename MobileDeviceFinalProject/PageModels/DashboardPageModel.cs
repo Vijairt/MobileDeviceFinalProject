@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MobileDeviceFinalProject.Data;
 using MobileDeviceFinalProject.Models;
 
 namespace MobileDeviceFinalProject.PageModels
@@ -23,8 +24,11 @@ namespace MobileDeviceFinalProject.PageModels
         [ObservableProperty] private string _vitaminStreakSummary = string.Empty;
         [ObservableProperty] private bool _isBusy;
 
-        public DashboardPageModel(MealRepository mealRepository, WorkoutRepository workoutRepository,
-            VitaminRepository vitaminRepository, ModalErrorHandler errorHandler)
+        public DashboardPageModel(
+            MealRepository mealRepository,
+            WorkoutRepository workoutRepository,
+            VitaminRepository vitaminRepository,
+            ModalErrorHandler errorHandler)
         {
             _mealRepository = mealRepository;
             _workoutRepository = workoutRepository;
@@ -33,17 +37,27 @@ namespace MobileDeviceFinalProject.PageModels
         }
 
         [RelayCommand]
-        private async Task Appearing() => await LoadDashboardAsync();
+        private async Task Appearing()
+        {
+            await LoadDashboardAsync();
+        }
 
         [RelayCommand]
-        private async Task Refresh() => await LoadDashboardAsync();
+        private async Task Refresh()
+        {
+            await LoadDashboardAsync();
+        }
 
         private async Task LoadDashboardAsync()
         {
+            if (IsBusy) return;
+
             IsBusy = true;
+
             try
             {
                 var today = DateTime.Today;
+                Today = today.ToString("dddd, MMM d");
 
                 var meals = await _mealRepository.GetByDateAsync(today);
                 TotalCaloriesToday = meals.Sum(m => m.Calories);
@@ -67,12 +81,16 @@ namespace MobileDeviceFinalProject.PageModels
                 if (vitamins.Count > 0)
                 {
                     var streakParts = new List<string>();
+
                     foreach (var v in vitamins.Take(3))
                     {
                         var streak = await _vitaminRepository.GetStreakAsync(v.Id);
                         if (streak > 0)
+                        {
                             streakParts.Add($"{v.Name}: {streak}-day streak 🔥");
+                        }
                     }
+
                     VitaminStreakSummary = streakParts.Count > 0
                         ? string.Join("\n", streakParts)
                         : "Log your vitamins today to start a streak!";
@@ -90,6 +108,11 @@ namespace MobileDeviceFinalProject.PageModels
             {
                 IsBusy = false;
             }
+        }
+
+        public async Task ForceReload()
+        {
+            await LoadDashboardAsync();
         }
     }
 }

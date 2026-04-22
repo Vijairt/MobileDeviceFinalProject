@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MobileDeviceFinalProject.Data;
 using MobileDeviceFinalProject.Models;
 
 namespace MobileDeviceFinalProject.PageModels
@@ -25,14 +26,28 @@ namespace MobileDeviceFinalProject.PageModels
         }
 
         [RelayCommand]
-        private async Task Appearing() => await LoadMealsAsync();
+        private async Task Appearing()
+        {
+            await LoadMealsAsync();
+        }
 
         [RelayCommand]
-        private async Task AddMeal() => await Shell.Current.GoToAsync("addmeal");
+        private async Task Refresh()
+        {
+            await LoadMealsAsync();
+        }
+
+        [RelayCommand]
+        private async Task AddMeal()
+        {
+            await Shell.Current.GoToAsync("addmeal");
+        }
 
         [RelayCommand]
         private async Task DeleteMeal(MealEntry meal)
         {
+            if (meal == null) return;
+
             try
             {
                 await _mealRepository.DeleteAsync(meal.Id);
@@ -47,13 +62,17 @@ namespace MobileDeviceFinalProject.PageModels
         private async Task LoadMealsAsync()
         {
             IsBusy = true;
+
             try
             {
                 Meals = await _mealRepository.GetByDateAsync(_currentDate);
+
                 TotalCalories = Meals.Sum(m => m.Calories);
                 TotalProtein = Meals.Sum(m => m.ProteinG);
                 TotalCarbs = Meals.Sum(m => m.CarbsG);
                 TotalFat = Meals.Sum(m => m.FatG);
+
+                SelectedDate = _currentDate.ToString("MMMM d, yyyy");
             }
             catch (Exception ex)
             {
@@ -63,6 +82,11 @@ namespace MobileDeviceFinalProject.PageModels
             {
                 IsBusy = false;
             }
+        }
+
+        public async Task ForceReload()
+        {
+            await LoadMealsAsync();
         }
     }
 }

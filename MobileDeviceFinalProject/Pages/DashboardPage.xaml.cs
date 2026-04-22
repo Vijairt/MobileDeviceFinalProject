@@ -4,10 +4,19 @@ namespace MobileDeviceFinalProject.Pages
 {
     public partial class DashboardPage : ContentPage
     {
-        public DashboardPage(DashboardPageModel model)
+        private readonly DashboardPageModel _viewModel;
+
+        public DashboardPage(DashboardPageModel viewModel)
         {
             InitializeComponent();
-            BindingContext = model;
+            BindingContext = viewModel;
+            _viewModel = viewModel;
+        }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            await _viewModel.ForceReload();
         }
     }
 }

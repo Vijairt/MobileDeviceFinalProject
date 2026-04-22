@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MobileDeviceFinalProject.Data;
 using MobileDeviceFinalProject.Models;
 
 namespace MobileDeviceFinalProject.PageModels
@@ -22,40 +23,68 @@ namespace MobileDeviceFinalProject.PageModels
         }
 
         [RelayCommand]
-        private async Task Appearing() => await LoadWorkoutsAsync();
+        private async Task Appearing()
+        {
+            await LoadWorkoutsAsync();
+        }
 
         [RelayCommand]
-        private async Task AddWorkout() => await Shell.Current.GoToAsync("addworkout");
+        private async Task Refresh()
+        {
+            await LoadWorkoutsAsync();
+        }
+
+        [RelayCommand]
+        private async Task AddWorkout()
+        {
+            await Shell.Current.GoToAsync("addworkout");
+        }
 
         [RelayCommand]
         private async Task DeleteWorkout(WorkoutEntry workout)
         {
+            if (workout == null || IsBusy) return;
+
+            IsBusy = true;
+
             try
             {
                 await _workoutRepository.DeleteAsync(workout.Id);
-                await LoadWorkoutsAsync();
+
+                var updated = WeeklyWorkouts.ToList();
+                updated.Remove(workout);
+                WeeklyWorkouts = updated;
+
+                RecalculateWorkoutTotals();
             }
             catch (Exception ex)
             {
                 _errorHandler.HandleError(ex);
             }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         private async Task LoadWorkoutsAsync()
         {
+            if (IsBusy) return;
+
             IsBusy = true;
+
             try
             {
                 var today = DateTime.Today;
                 var weekStart = today.AddDays(-(int)today.DayOfWeek);
+
                 WeeklyWorkouts = await _workoutRepository.GetByDateRangeAsync(weekStart, today);
-                TotalMinutesThisWeek = WeeklyWorkouts.Sum(w => w.DurationMinutes);
-                TotalMilesThisWeek = WeeklyWorkouts
-                    .Where(w => w.DistanceMiles.HasValue)
-                    .Sum(w => w.DistanceMiles!.Value);
+
+                RecalculateWorkoutTotals();
 
                 var lastWeekStart = weekStart.AddDays(-7);
                 var lastWeekEnd = weekStart.AddDays(-1);
+
                 var lastWeek = await _workoutRepository.GetByDateRangeAsync(lastWeekStart, lastWeekEnd);
                 var lastWeekMiles = lastWeek
                     .Where(w => w.DistanceMiles.HasValue)
@@ -63,8 +92,8 @@ namespace MobileDeviceFinalProject.PageModels
 
                 if (lastWeekMiles > 0)
                 {
-                    var goalMiles = Math.Round(Math.Min(lastWeekMiles * 1.10, lastWeekMiles * 1.20), 1);
-                    ProgressionTip = $"Great job! Try {goalMiles} miles this week (last week: {lastWeekMiles:F1} mi) 💪";
+                    var goalMiles = Math.Round(lastWeekMiles * 1.10, 1);
+                    ProgressionTip = $"Great job! Try {goalMiles:F1} miles this week (last week: {lastWeekMiles:F1} mi) 💪";
                 }
                 else
                 {
@@ -79,6 +108,19 @@ namespace MobileDeviceFinalProject.PageModels
             {
                 IsBusy = false;
             }
+        }
+
+        private void RecalculateWorkoutTotals()
+        {
+            TotalMinutesThisWeek = WeeklyWorkouts.Sum(w => w.DurationMinutes);
+            TotalMilesThisWeek = WeeklyWorkouts
+                .Where(w => w.DistanceMiles.HasValue)
+                .Sum(w => w.DistanceMiles!.Value);
+        }
+
+        public async Task ForceReload()
+        {
+            await LoadWorkoutsAsync();
         }
     }
 }

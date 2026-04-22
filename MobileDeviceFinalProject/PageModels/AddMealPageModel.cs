@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MobileDeviceFinalProject.Data;
 using MobileDeviceFinalProject.Models;
 
 namespace MobileDeviceFinalProject.PageModels
@@ -24,7 +25,9 @@ namespace MobileDeviceFinalProject.PageModels
         [ObservableProperty] private string? _photoPath;
         [ObservableProperty] private bool _isBusy;
 
-        public AddMealPageModel(MealRepository mealRepository, NutritionixService nutritionixService,
+        public AddMealPageModel(
+            MealRepository mealRepository,
+            NutritionixService nutritionixService,
             ModalErrorHandler errorHandler)
         {
             _mealRepository = mealRepository;
@@ -35,14 +38,16 @@ namespace MobileDeviceFinalProject.PageModels
         [RelayCommand]
         private async Task Search()
         {
-            if (string.IsNullOrWhiteSpace(SearchQuery)) return;
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+                return;
+
             IsSearching = true;
             SelectedResult = null;
+
             try
             {
                 SearchResults = await _nutritionixService.SearchFoodAsync(SearchQuery);
-                if (SearchResults.Count == 0)
-                    ShowManualEntry = true;
+                ShowManualEntry = SearchResults.Count == 0;
             }
             catch (Exception ex)
             {
@@ -56,13 +61,19 @@ namespace MobileDeviceFinalProject.PageModels
         }
 
         [RelayCommand]
-        private void SelectResult(NutritionResult result) => SelectedResult = result;
+        private void SelectResult(NutritionResult result)
+        {
+            SelectedResult = result;
+        }
 
         [RelayCommand]
         private async Task ConfirmApiEntry()
         {
-            if (SelectedResult == null) return;
+            if (SelectedResult == null)
+                return;
+
             IsBusy = true;
+
             try
             {
                 var entry = new MealEntry
@@ -77,6 +88,7 @@ namespace MobileDeviceFinalProject.PageModels
                     LoggedAt = DateTime.Now,
                     PhotoPath = PhotoPath
                 };
+
                 await _mealRepository.SaveAsync(entry);
                 await Shell.Current.GoToAsync("..");
             }
@@ -95,7 +107,9 @@ namespace MobileDeviceFinalProject.PageModels
         {
             if (string.IsNullOrWhiteSpace(ManualFoodName) || string.IsNullOrWhiteSpace(ManualCalories))
                 return;
+
             IsBusy = true;
+
             try
             {
                 var entry = new MealEntry
@@ -110,6 +124,7 @@ namespace MobileDeviceFinalProject.PageModels
                     LoggedAt = DateTime.Now,
                     PhotoPath = PhotoPath
                 };
+
                 await _mealRepository.SaveAsync(entry);
                 await Shell.Current.GoToAsync("..");
             }
@@ -128,11 +143,20 @@ namespace MobileDeviceFinalProject.PageModels
         {
             try
             {
-                if (MediaPicker.Default.IsCaptureSupported)
+                if (!MediaPicker.Default.IsCaptureSupported)
+                    return;
+
+                var photo = await MediaPicker.Default.CapturePhotoAsync();
+
+                if (photo != null)
                 {
-                    var photo = await MediaPicker.Default.CapturePhotoAsync();
-                    if (photo != null)
-                        PhotoPath = photo.FullPath;
+                    var localPath = Path.Combine(FileSystem.AppDataDirectory, photo.FileName);
+
+                    await using var sourceStream = await photo.OpenReadAsync();
+                    await using var localFileStream = File.OpenWrite(localPath);
+                    await sourceStream.CopyToAsync(localFileStream);
+
+                    PhotoPath = localPath;
                 }
             }
             catch (Exception ex)
@@ -142,9 +166,15 @@ namespace MobileDeviceFinalProject.PageModels
         }
 
         [RelayCommand]
-        private void ToggleManualEntry() => ShowManualEntry = !ShowManualEntry;
+        private void ToggleManualEntry()
+        {
+            ShowManualEntry = !ShowManualEntry;
+        }
 
         [RelayCommand]
-        private async Task Cancel() => await Shell.Current.GoToAsync("..");
+        private async Task Cancel()
+        {
+            await Shell.Current.GoToAsync("..");
+        }
     }
 }

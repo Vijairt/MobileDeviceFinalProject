@@ -18,44 +18,53 @@
         <ToolbarItem Text="Add" Command="{Binding AddVitaminCommand}" IconImageSource="{StaticResource IconAdd}" />
     </ContentPage.ToolbarItems>
 
-    <CollectionView
-        ItemsSource="{Binding Vitamins}"
-        Margin="{StaticResource LayoutPadding}">
-        <CollectionView.EmptyView>
-            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8" Margin="0,60">
-                <Label Text="No vitamins added yet." HorizontalOptions="Center" />
-                <Label Text="Tap + to add your first vitamin or supplement." FontSize="13" HorizontalOptions="Center" />
-            </VerticalStackLayout>
-        </CollectionView.EmptyView>
-        <CollectionView.ItemTemplate>
-            <DataTemplate x:DataType="pageModels:VitaminViewModel">
-                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
-                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-                        <VerticalStackLayout Grid.Column="0" Spacing="2">
-                            <Label Text="{Binding Entry.Name}" FontAttributes="Bold" FontSize="16" />
-                            <Label Text="{Binding Entry.Dosage}" FontSize="13" />
-                            <Label Text="{Binding Entry.Benefits}" FontSize="12" />
-                            <Label Text="{Binding StreakText}" FontSize="13" />
-                        </VerticalStackLayout>
-                        <Button
-                            Grid.Column="1"
-                            Text="{Binding TakenLabel}"
-                            FontSize="13"
-                            VerticalOptions="Center"
-                            Command="{Binding ToggleVitaminCommand, Source={RelativeSource AncestorType={x:Type pageModels:VitaminPageModel}}, x:DataType=pageModels:VitaminPageModel}"
-                            CommandParameter="{Binding .}" />
-                        <ImageButton
-                            Grid.Column="2"
-                            Source="{StaticResource IconDelete}"
-                            HeightRequest="36"
-                            WidthRequest="36"
-                            Aspect="Center"
-                            VerticalOptions="Center"
-                            Command="{Binding DeleteVitaminCommand, Source={RelativeSource AncestorType={x:Type pageModels:VitaminPageModel}}, x:DataType=pageModels:VitaminPageModel}"
-                            CommandParameter="{Binding .}" />
-                    </Grid>
-                </Border>
-            </DataTemplate>
-        </CollectionView.ItemTemplate>
-    </CollectionView>
+    <RefreshView
+        Command="{Binding RefreshCommand}"
+        IsRefreshing="{Binding IsBusy}">
+
+        <CollectionView
+            ItemsSource="{Binding Vitamins}"
+            Margin="{StaticResource LayoutPadding}">
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8" Margin="0,60">
+                    <Label Text="No vitamins added yet." HorizontalOptions="Center" />
+                    <Label Text="Tap + to add your first vitamin or supplement." FontSize="13" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="pageModels:VitaminViewModel">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="{Binding Entry.Name}" FontAttributes="Bold" FontSize="16" />
+                                <Label Text="{Binding Entry.Dosage}" FontSize="13" />
+                                <Label Text="{Binding Entry.Benefits}" FontSize="12" />
+                                <Label Text="{Binding StreakText}" FontSize="13" />
+                            </VerticalStackLayout>
+
+                            <Button
+                                Grid.Column="1"
+                                Text="{Binding TakenLabel}"
+                                FontSize="13"
+                                VerticalOptions="Center"
+                                Command="{Binding ToggleVitaminCommand, Source={RelativeSource AncestorType={x:Type pageModels:VitaminPageModel}}, x:DataType=pageModels:VitaminPageModel}"
+                                CommandParameter="{Binding .}" />
+
+                            <ImageButton
+                                Grid.Column="2"
+                                Source="{StaticResource IconDelete}"
+                                HeightRequest="36"
+                                WidthRequest="36"
+                                Aspect="Center"
+                                VerticalOptions="Center"
+                                Command="{Binding DeleteVitaminCommand, Source={RelativeSource AncestorType={x:Type pageModels:VitaminPageModel}}, x:DataType=pageModels:VitaminPageModel}"
+                                CommandParameter="{Binding .}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </RefreshView>
 </ContentPage>
