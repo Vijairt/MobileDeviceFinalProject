@@ -1,92 +1,95 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using System.Web;
 using MobileDeviceFinalProject.Models;
 
 namespace MobileDeviceFinalProject.Services
 {
-    /// <summary>
-    /// Service for querying the Nutritionix API for food nutrition data.
-    /// Register your own credentials at https://developer.nutritionix.com/
-    /// </summary>
+
     public class NutritionixService
     {
         private static readonly HttpClient _httpClient = new();
 
-        // Replace with your own Nutritionix API credentials
-        private const string AppId = "YOUR_APP_ID";
-        private const string AppKey = "YOUR_APP_KEY";
-        private const string NutrientsEndpoint = "https://trackapi.nutritionix.com/v2/natural/nutrients";
+     
+        private const string ApiKey = "mvRgTynkO20PpenVVgdsIefO88dfhgchdkVQp3ZD";
+        private const string SearchEndpoint = "https://api.nal.usda.gov/fdc/v1/foods/search";
+
+        // Nutrient IDs in USDA FoodData Central
+        private const int NutrientIdCalories = 1008;
+        private const int NutrientIdProtein  = 1003;
+        private const int NutrientIdCarbs    = 1005;
+        private const int NutrientIdFat      = 1004;
 
         /// <summary>
-        /// Searches Nutritionix for nutrition data matching <paramref name="query"/>.
-        /// Returns an empty list when offline or when the API call fails.
+        /// Searches the USDA FoodData Central for foods matching <paramref name="query"/>.
+        /// Returns up to 10 results. Throws on network or API errors.
         /// </summary>
         public async Task<List<NutritionResult>> SearchFoodAsync(string query)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return [];
 
-            try
+            var url = $"{SearchEndpoint}?query={HttpUtility.UrlEncode(query)}&pageSize=10&api_key={ApiKey}";
+
+            using var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
             {
-                using var request = new HttpRequestMessage(HttpMethod.Post, NutrientsEndpoint);
-                request.Headers.Add("x-app-id", AppId);
-                request.Headers.Add("x-app-key", AppKey);
-                request.Headers.Add("x-remote-user-id", "0");
-                request.Content = JsonContent.Create(new { query });
-
-                using var response = await _httpClient.SendAsync(request);
-                if (!response.IsSuccessStatusCode)
-                    return [];
-
-                var json = await response.Content.ReadFromJsonAsync<NutritionixResponse>();
-                if (json?.Foods == null)
-                    return [];
-
-                return json.Foods.Select(f => new NutritionResult
-                {
-                    FoodName = f.FoodName,
-                    Calories = f.Calories,
-                    ProteinG = f.ProteinG,
-                    CarbsG = f.CarbsG,
-                    FatG = f.FatG,
-                    ServingQty = f.ServingQty,
-                    ServingUnit = f.ServingUnit
-                }).ToList();
+                var body = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"USDA FoodData Central error {(int)response.StatusCode}: {response.ReasonPhrase}. {body}");
             }
-            catch
-            {
+
+            var json = await response.Content.ReadFromJsonAsync<UsdaSearchResponse>();
+            if (json?.Foods == null || json.Foods.Count == 0)
                 return [];
+
+            var results = new List<NutritionResult>();
+
+            foreach (var food in json.Foods)
+            {
+                double GetNutrient(int id) =>
+                    food.FoodNutrients?.FirstOrDefault(n => n.NutrientId == id)?.Value ?? 0;
+
+                results.Add(new NutritionResult
+                {
+                    FoodName   = food.Description ?? string.Empty,
+                    Calories   = GetNutrient(NutrientIdCalories),
+                    ProteinG   = GetNutrient(NutrientIdProtein),
+                    CarbsG     = GetNutrient(NutrientIdCarbs),
+                    FatG       = GetNutrient(NutrientIdFat),
+                    ServingQty = 100,
+                    ServingUnit = "g"
+                });
             }
+
+            return results;
         }
 
-        private sealed class NutritionixResponse
+        // ── USDA response shapes ──────────────────────────────────────────────
+
+        private sealed class UsdaSearchResponse
         {
             [JsonPropertyName("foods")]
-            public List<NutritionixFood>? Foods { get; set; }
+            public List<UsdaFood>? Foods { get; set; }
         }
 
-        private sealed class NutritionixFood
+        private sealed class UsdaFood
         {
-            [JsonPropertyName("food_name")]
-            public string FoodName { get; set; } = string.Empty;
+            [JsonPropertyName("description")]
+            public string? Description { get; set; }
 
-            [JsonPropertyName("nf_calories")]
-            public double Calories { get; set; }
+            [JsonPropertyName("foodNutrients")]
+            public List<UsdaNutrient>? FoodNutrients { get; set; }
+        }
 
-            [JsonPropertyName("nf_protein")]
-            public double ProteinG { get; set; }
+        private sealed class UsdaNutrient
+        {
+            [JsonPropertyName("nutrientId")]
+            public int NutrientId { get; set; }
 
-            [JsonPropertyName("nf_total_carbohydrate")]
-            public double CarbsG { get; set; }
-
-            [JsonPropertyName("nf_total_fat")]
-            public double FatG { get; set; }
-
-            [JsonPropertyName("serving_qty")]
-            public double ServingQty { get; set; }
-
-            [JsonPropertyName("serving_unit")]
-            public string ServingUnit { get; set; } = string.Empty;
+            [JsonPropertyName("value")]
+            public double Value { get; set; }
         }
     }
 }
