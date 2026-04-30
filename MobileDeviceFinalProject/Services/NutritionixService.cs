@@ -11,7 +11,7 @@ namespace MobileDeviceFinalProject.Services
         private static readonly HttpClient _httpClient = new();
 
      
-        private const string ApiKey = "mvRgTynkO20PpenVVgdsIefO88dfhgchdkVQp3ZD";
+        private const string ApiKey = Secrets.UsdaApiKey;
         private const string SearchEndpoint = "https://api.nal.usda.gov/fdc/v1/foods/search";
 
         // Nutrient IDs in USDA FoodData Central
